@@ -11,6 +11,14 @@ A Mechanism Unit represents one system mechanism.
 - Evidence: how is it verified?
 - Conclusion: stable understanding.
 
+## Additional Metadata
+
+Each unit should include:
+
+- Source references
+- Dependencies on other mechanisms
+- Verification experiments
+
 ## Unit Boundary
 
 One unit should contain one core mechanism and one verification loop.

@@ -21,6 +21,7 @@ A topic is not considered learned merely because its documentation or source tex
 ```text
 docs/
   LEARNING_MECHANISM.md      # repository-wide learning protocol
+  LEARNING_BRANCH_WORKFLOW.md # Git workflow for mechanism learning branches
 templates/
   MECHANISM_UNIT.md          # template for one mechanism
   EXPERIMENT.md              # template for a reproducible experiment
@@ -32,4 +33,5 @@ Individual systems may follow books or documentation chapter-by-chapter for cove
 
 ## Start here
 
-Read [`docs/LEARNING_MECHANISM.md`](docs/LEARNING_MECHANISM.md) before adding a new learning track.
+1. Read [`docs/LEARNING_MECHANISM.md`](docs/LEARNING_MECHANISM.md) for the repository-wide learning protocol.
+2. Read [`docs/LEARNING_BRANCH_WORKFLOW.md`](docs/LEARNING_BRANCH_WORKFLOW.md) before starting a new Mechanism Unit branch.

@@ -1,6 +1,6 @@
 # Unix/Linux Coverage Map
 
-本文件只负责回答 **“教材覆盖到哪里”**，不承担机制知识组织。机制结论、实验和证据应按仓库的 `LEARNING_MECHANISM.md` 单独沉淀。
+本文件只回答 **“来源处理到哪里、是否已映射到机制”**。机制模型、实验、evidence 和 learned 状态必须写入 [`README.md`](./README.md) 与 `mechanisms/`。
 
 ## Primary source
 
@@ -10,21 +10,37 @@
 - 正文规模：64 章 + 附录 A–F
 - 初始化日期：2026-08-20
 
+## Coverage status contract
+
+Coverage status 只能使用：
+
+| Status | 含义 |
+| --- | --- |
+| `not-started` | 尚未开始阅读该来源单元 |
+| `in-progress` | 已开始阅读，但 source review 尚未完成 |
+| `source-reviewed` | 已审阅来源，记录了 locator、关键问题和候选 claims |
+| `mapped` | 已把候选机制链接到 Mechanism Map 或对应 unit；不表示机制已验证 |
+
+禁止在本文件使用 `observed`、`cross-validated`、`learned` 等 Claim 或 Unit 状态。
+
 ## Current checkpoint
 
-当前进度：**已定位并打开教材；已抽取并核对全书目录；正文尚未在本 Coverage Map 中标记为已学习。**
+当前进度：**已定位并打开教材；已抽取并核对全书目录；正文尚未标记为 source-reviewed。**
 
-本次完成：
+已完成：
 
 - [x] 找到 Unix/Linux 系统编程主教材
 - [x] 打开教材并建立可读取文档
 - [x] 提取 64 章与附录 A–F 的目录结构
 - [x] 核对第 14 章主题：EPUB 结构节点误标为“系统编程概念”，前言和正文均表明实际主题是“文件系统”
-- [ ] 开始逐章 source-first 学习
-- [ ] 从章节中识别 Mechanism Units
-- [ ] 为关键机制建立可证伪实验与运行时证据
 
-状态约定：`not-started` → `in-progress` → `source-reviewed` → `experimented` → `cross-validated` → `learned`。
+待完成：
+
+- [ ] 开始逐 section source-first 阅读
+- [ ] 记录稳定 reading locator
+- [ ] 提取机制问题和候选 Claim IDs
+- [ ] 把候选机制映射到 [`README.md`](./README.md)
+- [ ] 在独立 `learn/unix/<mechanism>` branch 中验证机制
 
 ## Chapter coverage
 
@@ -106,10 +122,31 @@
 | E | 更多信息源 | not-started |
 | F | 部分习题解答 | not-started |
 
+## Update rule
+
+完成来源处理时按事实更新：
+
+```text
+not-started
+→ in-progress
+→ source-reviewed
+→ mapped
+```
+
+`mapped` 只说明 chapter / section 已关联到候选 Mechanism Unit。真正的 Claim status 和 Unit status 由对应 unit 与 merge review 决定。
+
+Coverage 更新使用独立 `coverage(unix): ...` commit，不与 mechanism/evidence 变更混合。
+
 ## Next checkpoint
 
-下一次学习时，从一个明确问题开始，并遵循仓库学习循环：
+下一次学习从一个明确 section 和问题开始：
 
-`Question → Hypothesis → Source Model → Experiment → Observation → Evidence → Conclusion → Boundary → Transfer`
+```text
+section reading
+→ source locator
+→ candidate claims
+→ candidate mechanism
+→ update coverage
+```
 
-完成章节阅读时更新本文件的 coverage 状态；真正形成的机制模型与实验不要塞回章节笔记，而应写入 `topics/unix/mechanisms/`。
+需要实验和证据时，创建独立 Mechanism Unit，不把结论塞回本文件。

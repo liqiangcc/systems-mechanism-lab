@@ -1,0 +1,32 @@
+name: Validate framework
+
+on:
+  push:
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "templates/**"
+      - "topics/**"
+      - "scripts/validate_framework.py"
+      - ".github/workflows/validate-framework.yml"
+  pull_request:
+    paths:
+      - "README.md"
+      - "docs/**"
+      - "templates/**"
+      - "topics/**"
+      - "scripts/validate_framework.py"
+      - ".github/workflows/validate-framework.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate framework contracts
+        run: python3 scripts/validate_framework.py

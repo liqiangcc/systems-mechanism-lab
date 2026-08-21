@@ -1,40 +1,31 @@
 # Learning Branch Workflow
 
-本规范定义 `systems-mechanism-lab` 的 Git 学习工作流。目标是让 Git 历史表达**认知如何从假设经过证据验证，最终成为可长期保留的机制模型**，而不是把仓库变成按会话堆积的笔记集合。
+本规范定义 `systems-mechanism-lab` 的 Git 工作流。目标是让 Git 历史表达认知如何从假设经过证据约束，最终成为可长期保留的机制模型。
 
-它与 [`LEARNING_MECHANISM.md`](./LEARNING_MECHANISM.md) 配套：学习机制定义“怎样建立和验证认知”，本文定义“这些认知怎样通过分支、commit 和 merge gate 进入 `main`”。
+配套规范：
 
----
+- [`WHITEBOX_LEARNING_FRAMEWORK.md`](./WHITEBOX_LEARNING_FRAMEWORK.md)
+- [`LEARNING_MECHANISM.md`](./LEARNING_MECHANISM.md)
+- [`../templates/MERGE_REVIEW.md`](../templates/MERGE_REVIEW.md)
 
-## 1. 核心原则
+## 1. Branch responsibilities
 
-### 1.1 `main` 保存已验证的长期认知
+### `main`
 
-`main` 是仓库的 canonical knowledge base。
+`main` 是 canonical knowledge base，保存：
 
-允许进入 `main` 的内容应当是：
+- 已通过 merge gate 的 Mechanism Unit；
+- 可重复 experiment 和 raw evidence；
+- Claim-Evidence Matrix；
+- 明确的 boundaries、counterexamples 和 unresolved claims；
+- 事实性的 Coverage Map 与 Mechanism Map；
+- 仓库级权威规范和模板。
 
-- 已满足 merge gate 的 Mechanism Unit；
-- 可重复的实验及其原始观察；
-- 能支持结论的 evidence；
-- 明确记录边界、反例和不确定性的结论；
-- 事实性的 coverage 元数据。
+`main` 允许保留未知，但未知必须显式标记，不能伪装成已验证结论。
 
-以下内容不应作为机制结论直接留在 `main`：
+### `learn/<system>/<mechanism>`
 
-- 尚未验证的猜测；
-- 只有 AI 解释、没有可追溯来源或实验支持的结论；
-- 临时探索记录；
-- 失败且没有学习价值的中间产物；
-- 将“读完章节”误写成“机制已掌握”的状态。
-
-`main` 的含义不是“从不出现未知”，而是：**未知必须被显式标记，不能伪装成已验证认知。**
-
-### 1.2 `learn/*` 用于机制学习
-
-所有新的机制学习默认从 `main` 创建 `learn/*` 分支。
-
-命名格式：
+所有新机制学习默认从最新 `main` 创建：
 
 ```text
 learn/<system>/<mechanism-slug>
@@ -44,130 +35,99 @@ learn/<system>/<mechanism-slug>
 
 ```text
 learn/unix/process-creation
-learn/unix/file-descriptor-sharing
+learn/unix/file-open-description
 learn/mysql/mvcc-visibility
 learn/kafka/isr-membership
 ```
 
-分支名称描述**机制**，而不是章节、日期或学习会话。
+一个 `learn/*` 分支只建立一个 Mechanism Unit。
 
-不推荐：
+### `docs/<scope>`
 
-```text
-learn/chapter-24
-learn/2026-08-20
-learn/today-notes
-```
-
-### 1.3 一个 Mechanism Unit 一个短生命周期分支
-
-一个 `learn/*` 分支只解决一个 Mechanism Unit。
-
-如果学习中发现第二个可以独立解释、独立实验、独立合并的机制，应拆出新的 `learn/*` 分支，而不是继续扩大当前分支。
-
-短生命周期意味着：
-
-- 范围足够小，可以独立验证；
-- 达到 merge gate 后立即合并；
-- 被证伪或方向错误时可以直接关闭；
-- 不把长期未解决问题持续堆积在一个巨型 learning branch 中。
-
-分支寿命由“一个机制是否形成闭环”决定，而不是人为规定固定天数。
-
----
-
-## 2. Branch Responsibilities
-
-| 分支 | 职责 | 可以包含 | 不应包含 |
-| --- | --- | --- | --- |
-| `main` | 保存长期、可复用、已验证状态 | validated mechanism、evidence、reproducible experiment、coverage metadata | 未验证机制结论、临时探索 |
-| `learn/<system>/<mechanism>` | 建立并验证一个 Mechanism Unit | hypothesis、source model、experiment、observation、evidence、boundary、final mechanism | 第二个独立机制、大范围章节笔记、无关重构 |
-
-原则：
-
-> **branch boundary = mechanism boundary**
-
-Git 分支本身就是学习范围控制器。
-
----
-
-## 3. Coverage 与 Mechanism 必须分离
-
-Coverage 和 Mechanism 是两种不同状态，不能互相替代。
-
-### Coverage 回答
+仓库级框架、模板和非机制文档维护使用：
 
 ```text
-我读到哪里？
-哪些章节 / 文档 / 论文已经覆盖？
-哪些来源仍未处理？
+docs/<scope>
 ```
 
-对应文件通常是：
+例如：
 
 ```text
-topics/<system>/coverage.md
+docs/whitebox-framework
+docs/experiment-template
 ```
 
-### Mechanism 回答
+不要把 repository-level 规范维护伪装成某个系统机制。
+
+## 2. Branch boundary equals mechanism boundary
+
+当前分支必须能用一句话描述：
 
 ```text
-我真正理解并验证了什么？
-机制的状态、规则、因果链和边界是什么？
-证据是什么？
+验证 fork 后地址空间复制的机制及其可观察证据。
 ```
 
-对应目录通常是：
+出现以下情况时应拆分：
+
+- 包含第二个可独立解释和实验的机制；
+- 同时跨越多个不相关 failure model；
+- 需要独立 reviewer 才能判断；
+- 文件开始按章节堆积而不是按 claim 组织；
+- branch goal 中出现多个互不依赖的“以及”。
+
+分支寿命由机制闭环决定，不按固定天数决定。达到 gate 后合并；范围错误时关闭。
+
+## 3. Coverage and mechanism separation
+
+Coverage Map 回答：
 
 ```text
-topics/<system>/mechanisms/<mechanism>/
+source read to where?
+which section is source-reviewed?
+which section has been mapped to mechanisms?
 ```
 
-### 分离规则
-
-1. `coverage.md` 不承载机制正文或最终因果解释。
-2. mechanism 文件不以“读到第几章”作为完成条件。
-3. 章节完成不自动意味着任何 Mechanism Unit 已完成。
-4. 一个机制跨多个章节时，只维护一个 Mechanism Unit。
-5. 一个章节包含多个机制时，分别进入多个 `learn/*` 分支。
-6. coverage 更新使用独立 commit，不与 mechanism/evidence 内容混在同一个 commit。
-7. coverage 只能记录事实状态，例如 `read / mapped / pending`；不能用 coverage 状态代替 evidence 状态。
-
-推荐关系：
+Mechanism Unit 回答：
 
 ```text
-Source / Chapter
-      │
-      ├──> coverage.md        # navigation state
-      │
-      └──> Mechanism Unit     # durable knowledge
-                │
-                └──> experiments / evidence
+what is the internal model?
+which claims are supported?
+what evidence and boundaries exist?
 ```
 
----
+强制规则：
 
-## 4. 标准分支生命周期
+1. `coverage.md` 不承载机制正文；
+2. Coverage status 只能是 `not-started | in-progress | source-reviewed | mapped`；
+3. Claim status 不能写入 coverage table；
+4. “章节完成”不自动产生 `learned` unit；
+5. 一个章节中的多个机制进入不同 `learn/*` 分支；
+6. 一个跨章节机制只维护一个 unit；
+7. coverage 更新使用独立 `coverage(...)` commit；
+8. Mechanism Map 只链接和索引 unit，不复制正文。
+
+## 4. Standard branch lifecycle
 
 ```text
 main
   │
   ├─ create learn/<system>/<mechanism>
   │
-  ├─ Question / Hypothesis
-  ├─ Source Model
-  ├─ Experiment
-  ├─ Observation
-  ├─ Evidence
-  ├─ Conclusion
-  ├─ Boundary / Counterexample
+  ├─ draft Mechanism Unit
+  ├─ define claims and competing hypotheses
+  ├─ collect source evidence
+  ├─ run experiments
+  ├─ preserve raw evidence
+  ├─ update Claim-Evidence Matrix
+  ├─ write bounded conclusion
+  ├─ record counterexamples / transfer
+  ├─ complete MERGE_REVIEW.md
+  ├─ run repository validator
   │
-  ├─ Merge Gate
-  │
-  └─ merge → main
+  └─ merge → main → delete branch
 ```
 
-### Step 1 — 从最新 `main` 建分支
+### Step 1 — Start from current `main`
 
 ```bash
 git switch main
@@ -175,45 +135,45 @@ git pull --ff-only
 git switch -c learn/unix/process-creation
 ```
 
-### Step 2 — 建立单一 Mechanism Unit
-
-优先从 `templates/MECHANISM_UNIT.md` 创建机制目录。
-
-当前分支必须能够用一句话描述目标：
+### Step 2 — Create the artifacts
 
 ```text
-验证 fork 后地址空间复制的真实机制及其可观察证据。
+topics/<system>/mechanisms/<mechanism>/
+  README.md
+  MERGE_REVIEW.md
+  experiments/
 ```
 
-如果一句话中开始出现多个互不依赖的“以及”，通常意味着应该拆分。
+从模板复制，不手写另一套结构。
 
-### Step 3 — 先写假设，再做实验
+### Step 3 — Record hypotheses before results
 
-不要在知道结果后伪造 hypothesis。
+至少先记录：
 
-至少记录：
+- Core Question；
+- H1 / H2；
+- distinguishing observation；
+- falsification criteria。
 
-- 当前问题；
-- 竞争假设；
-- 哪个观察可以区分它们。
+### Step 4 — Let commits express epistemic change
 
-### Step 4 — 让 commit 表达认知推进
+Commit 应描述认知状态变化，而不是会话活动。
 
-commit 不按“今天做了什么”组织，而按**认知状态变化**组织。
+### Step 5 — Move Unit status to `review-ready`
 
-### Step 5 — 满足 Merge Gate
+只有作者完成 self-review、Claim-Evidence Matrix 和 validator 后，才能标记 `review-ready`。
 
-未达到 gate 就继续留在 `learn/*`，或者明确关闭为 falsified / abandoned；不要为了“保持进度”提前进入 `main`。
+### Step 6 — Independent merge review
 
-### Step 6 — 合并后删除学习分支
+Reviewer 使用 `MERGE_REVIEW.md` 检查范围、证据、边界和状态语义。未通过就继续留在 branch。
 
-Mechanism Unit 合并后，`learn/*` 已完成使命，应删除。
+### Step 7 — Merge and close
 
-后续如果出现新证据推翻原结论，创建新的 `learn/*` 分支修正，而不是复活旧分支。
+通过后进入 `main`，Unit status 改为 `learned`，删除短生命周期 branch。
 
----
+后续新证据推翻结论时，创建新的 `learn/*` branch 修正，不复活旧 branch。
 
-## 5. Commit 规范
+## 5. Commit convention
 
 推荐格式：
 
@@ -221,29 +181,37 @@ Mechanism Unit 合并后，`learn/*` 已完成使命，应删除。
 <type>(<system>/<mechanism>): <epistemic change>
 ```
 
-### 类型
+Repository-level docs 可以省略 system/mechanism：
+
+```text
+docs(framework): separate coverage and claim states
+```
+
+### Types
 
 | type | 含义 |
 | --- | --- |
-| `learn` | 建立问题、假设或初始模型 |
+| `learn` | 建立问题、scope、hypothesis 或初始模型 |
 | `experiment` | 新增或修正可重复实验 |
-| `evidence` | 记录来源证据或运行时观察 |
-| `mechanism` | 更新经过证据支持的机制结论 / 边界 |
+| `evidence` | 保存来源证据、raw evidence 或 observation |
+| `mechanism` | 更新 claim、因果链、边界或最终模型 |
 | `coverage` | 只更新来源覆盖状态 |
-| `docs` | 仓库级学习规范、模板等维护 |
+| `docs` | 仓库级规范、模板、validator |
+| `review` | 记录独立审查结论 |
 
 示例：
 
 ```text
-learn(unix/process-creation): define competing fork memory hypotheses
-experiment(unix/process-creation): observe private pages after child write
-evidence(unix/process-creation): record proc memory observations
-mechanism(unix/process-creation): conclude copy-on-write boundary
-coverage(unix): map TLPI process-creation sections
-docs(workflow): define learning branch merge gate
+learn(unix/process-creation): define competing memory hypotheses
+experiment(unix/process-creation): observe page changes after child write
+evidence(unix/process-creation): record proc memory evidence E1
+mechanism(unix/process-creation): cross-validate C2 within Linux boundary
+coverage(unix): map process-creation sections
+review(unix/process-creation): accept claim-evidence traceability
+docs(framework): add executable merge review
 ```
 
-禁止使用低信息量提交作为默认习惯：
+禁止默认使用：
 
 ```text
 update notes
@@ -253,175 +221,132 @@ fix docs
 wip
 ```
 
-### Commit 原子性
+### Atomicity
 
-一个 commit 应尽量只表达一种状态变化。
+一个 commit 尽量只表达一种状态变化：
 
-特别要求：
-
-- `coverage(...)` 不与 `mechanism(...)` 混合；
-- 原始 observation 不和后验解释伪装成同一步；
-- 大量格式化 / 重构不和机制结论混合；
-- 修正被证伪假设时，应让历史能够看出“旧模型 → 证据 → 新模型”。
-
-Git history 应能够回答：
-
-> **我们为什么开始相信这个结论？**
-
----
+- coverage 不与 mechanism 混合；
+- raw evidence 不与后验解释伪装成同一步；
+- 格式化不与 claim 变化混合；
+- 被证伪时保留“旧假设 → evidence → 新状态”的历史；
+- framework rule 和对应 template 应在同一完整变更中保持一致。
 
 ## 6. Merge Gate
 
-`learn/*` 合入 `main` 前，至少检查以下 gate。
+每个 mechanism directory 必须包含已填写的 `MERGE_REVIEW.md`。
 
 ### Gate A — Scope
 
-- [ ] 当前分支只有一个 Mechanism Unit。
-- [ ] 没有混入第二个独立机制。
-- [ ] 没有无关重构、大段章节摘录或临时文件。
+- [ ] 只有一个 Mechanism Unit；
+- [ ] Problem、scope 和 non-goals 明确；
+- [ ] 没有无关重构、整章摘录或临时文件；
+- [ ] dependencies 已记录。
 
 ### Gate B — Model
 
-- [ ] Problem 清楚。
-- [ ] 关键对象、状态、规则或状态转换已描述。
-- [ ] 关键 causal chain 能解释观察到的行为。
-- [ ] 重要 invariant / trade-off 已记录（适用时）。
+- [ ] objects、states、transitions、rules 足以解释行为；
+- [ ] causal chain 引用关键 Claim IDs；
+- [ ] invariants 和 trade-offs 已记录（适用时）；
+- [ ] conclusion 没有引入 matrix 外的新 claim。
 
-### Gate C — Evidence
+### Gate C — Traceability
 
-- [ ] 关键结论有可追溯 source evidence 或 runtime evidence。
-- [ ] 对可实验的重要结论，默认至少有一个可重复实验。
-- [ ] observation 与 interpretation 分开记录。
-- [ ] evidence 状态明确，不把 `hypothesis` 写成事实。
-- [ ] 关键结论优先达到 `cross-validated`；若实验不可行，仅 `source-confirmed` 时必须明确原因和限制。
+- [ ] 关键叙述已拆为 Claim IDs；
+- [ ] Source IDs 有版本和 locator；
+- [ ] Runtime Evidence IDs 能回到 experiment / raw evidence；
+- [ ] 每个关键 claim 有 evidence 或明确保持 unresolved；
+- [ ] 没有把 AI 回答登记为 evidence。
 
-### Gate D — Falsifiability & Boundary
+### Gate D — Falsifiability and evidence
 
-- [ ] 写明什么结果会推翻当前模型，或已经记录竞争假设如何被排除。
-- [ ] 至少记录一个边界条件、异常路径或反例。
-- [ ] 没有把实现细节无条件泛化成系统不变量。
+- [ ] competing hypotheses 在结果前记录；
+- [ ] falsification criteria 明确；
+- [ ] observation 与 inference 分离；
+- [ ] 可实验的重要 claim 至少有一个可重复 experiment；
+- [ ] `source-confirmed` 但无实验的 claim 写明原因；
+- [ ] 不把“与模型一致”写成“唯一原因已证明”。
 
-### Gate E — Reproducibility
+### Gate E — Boundaries
 
-- [ ] 实验包含必要环境 / 版本信息。
-- [ ] 命令、输入、观察方法足够让之后重新执行。
-- [ ] 原始输出与人工解释可区分。
+- [ ] 至少一个 boundary、exceptional path 或 counterexample；
+- [ ] version / implementation applicability 明确；
+- [ ] 未排除的 alternative explanations 保留；
+- [ ] 没有把实现细节无条件泛化成系统 invariant。
 
-### Gate F — Separation
+### Gate F — State semantics
 
-- [ ] coverage 与 mechanism 使用不同文件职责。
-- [ ] coverage 更新若存在，使用独立 commit。
-- [ ] “章节已读完”没有被当成 mechanism learned 的证据。
+- [ ] Coverage、Unit 和 Claim status 没有混用；
+- [ ] Unit status 当前为 `review-ready`；
+- [ ] falsified claims 没有从历史中静默删除；
+- [ ] unresolved claims 不影响已接受结论的最小范围，或已阻止合并。
 
-### Gate G — Repository Quality
+### Gate G — Reproducibility
 
-- [ ] 分支基于足够新的 `main`，没有未处理冲突。
-- [ ] 文件路径符合仓库结构。
-- [ ] 没有明显重复 Mechanism Unit。
-- [ ] commit message 能说明认知状态变化。
+- [ ] environment、version、commands、inputs 完整；
+- [ ] raw evidence 存在或有稳定 locator；
+- [ ] 复现实验所需权限和前置状态已说明；
+- [ ] 清理步骤或副作用已记录。
 
-只有 gate 通过后，Mechanism Unit 才进入 `main`。
+### Gate H — Repository quality
 
----
+- [ ] branch 基于足够新的 `main`；
+- [ ] 路径符合目录合同；
+- [ ] Mechanism Map 已更新（如需）；
+- [ ] coverage 更新使用独立 commit（如有）；
+- [ ] `python3 scripts/validate_framework.py` 通过；
+- [ ] commit history 能回答“为什么开始相信这条结论”。
 
-## 7. Merge 策略
+## 7. Merge strategy
 
-默认推荐 **保留有学习价值的 commit 历史**。
+默认保留有学习价值的 commit 历史。
 
-如果分支中的 commit 已按“假设 → 实验 → 证据 → 结论”组织，可以使用普通 merge 或 rebase merge，让认知演化仍可追踪。
+如果 commit 已按“hypothesis → experiment → evidence → claim update”组织，可使用普通 merge 或 rebase merge。若存在大量无意义 WIP，应先整理。
 
-如果分支充满临时修正、噪声 commit，应在合并前整理历史；不要让 `main` 永久保存大量无意义 WIP。
+判断标准不是 commit 数量，而是：
 
-是否 squash 不是绝对规则，判断标准是：
+> 合并后的历史是否帮助未来的人或 AI 重建证据链？
 
-> **合并后的历史是否仍能帮助未来的人或 AI 重建证据链？**
+## 8. Outcomes
 
-不要为了 commit 数量少而 squash 掉真正有解释价值的认知演化。
+### Learned
 
----
-
-## 8. 失败学习也要有明确出口
-
-并非每个 `learn/*` 都必须合并。
-
-可能结果：
-
-### Validated
-
-机制达到 merge gate，合并到 `main`。
+Gate 通过，进入 `main`。
 
 ### Falsified
 
-原假设被推翻，但实验或反例本身具有长期价值。
-
-此时可以把**被证伪的命题、证据和正确边界**整理成可验证知识后再合并。
+核心假设被推翻，但反例、实验或修正模型具有长期价值。整理为明确知识后可以合并。
 
 ### Abandoned
 
-问题定义错误、没有长期价值或当前无法验证。
+问题边界错误、当前不可验证或没有长期价值。关闭并删除 branch，不为“有产出”强行合并。
 
-直接关闭并删除分支，不为了“有产出”强行合并。
+## 9. Example: chapter to branches
 
-因此：
-
-> **关闭一个错误分支也是成功的范围控制。**
-
----
-
-## 9. 示例：从章节到多个机制分支
-
-假设阅读 Unix 进程相关章节，识别出三个机制：
+阅读 Unix 进程章节后识别：
 
 ```text
 process creation
-file descriptor inheritance
+file-open-description sharing
 copy-on-write memory
 ```
 
-不要创建：
-
-```text
-learn/unix/chapter-processes
-```
-
-然后把三个机制全部堆进去。
-
-应拆成：
+不要创建一个巨型章节 branch。应分别建立：
 
 ```text
 learn/unix/process-creation
-learn/unix/fd-inheritance
+learn/unix/file-open-description-sharing
 learn/unix/copy-on-write
 ```
 
-coverage 仍然只负责记录章节是否完成映射：
+Coverage Map 只记录来源是否 `source-reviewed` 或 `mapped`。
 
-```text
-topics/unix/coverage.md
-```
+## 10. Minimum rules
 
-三个机制分别完成各自实验、证据链和 merge gate 后进入 `main`。
-
-这样即使以后换成 Kafka、MySQL、Redis 或 JVM，Git 工作流仍然保持一致：
-
-```text
-source navigation != knowledge structure
-chapter != mechanism
-branch boundary = mechanism boundary
-main = validated durable state
-```
-
----
-
-## 10. 最小执行规则
-
-如果只记住六条：
-
-1. `main` 只保留可长期依赖的已验证状态。
-2. 新机制从 `learn/<system>/<mechanism>` 开始。
-3. 一个 Mechanism Unit 一个短生命周期分支。
-4. Coverage 与 Mechanism 分离，coverage 使用独立 commit。
-5. commit 描述认知变化，而不是学习时间或会话活动。
-6. 通过 merge gate 后才进入 `main`，合并后删除 `learn/*`。
-
-这套规则的最终目标不是制造 Git 流程，而是让仓库本身成为一张**可审计、可复现、可证伪的系统认知图谱**。
+1. `main` 保存可审计的长期认知；
+2. 新机制使用 `learn/<system>/<mechanism>`；
+3. repository-level 规范维护使用 `docs/<scope>`；
+4. 一个 branch 一个 Mechanism Unit；
+5. coverage、unit、claim 三类状态分离；
+6. 每个关键 claim 连接 evidence；
+7. merge 前填写 `MERGE_REVIEW.md` 并运行 validator；
+8. 通过后合并并删除 learning branch。

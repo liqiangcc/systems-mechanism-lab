@@ -1,87 +1,123 @@
 # Learning Mechanism
 
-本仓库的目标不是“读完一本书”或“积累大量笔记”，而是建立一套可重复使用的系统学习机制：把一个系统从黑盒 API 逐步拆成可以解释、观察、实验、证伪和迁移的机制。
+本文件定义如何把一个系统从黑盒 API 拆成可解释、可观察、可证伪和可迁移的机制认知。
 
-适用范围不限于 Unix/Linux。Kafka、MySQL、Redis、JVM、网络、存储等系统都应复用同一套学习方法。
+框架总览与术语边界见 [`WHITEBOX_LEARNING_FRAMEWORK.md`](./WHITEBOX_LEARNING_FRAMEWORK.md)。Git 分支与 merge gate 见 [`LEARNING_BRANCH_WORKFLOW.md`](./LEARNING_BRANCH_WORKFLOW.md)。
 
----
-
-## 1. 学习目标
+## 1. Definition of understanding
 
 对一个机制真正掌握，至少应做到：
 
-1. **能解释**：说清楚它解决什么问题、由哪些状态和规则组成、因果链是什么。
-2. **能预测**：给定输入或条件变化，能够预测系统行为。
-3. **能观察**：知道应该观察哪些现象、指标、系统调用、文件、日志、状态或事件。
-4. **能验证**：能设计最小实验支持或推翻自己的解释。
-5. **能界定边界**：知道结论在哪些条件下成立，什么时候会失效。
-6. **能迁移**：能把机制映射到另一个系统，而不是只记住某个产品的命令或 API。
+1. **Explain**：说明它解决什么问题、由哪些对象和规则组成。
+2. **Predict**：给定输入、故障或条件变化，预测行为。
+3. **Observe**：知道哪些系统调用、状态、指标、文件、日志或事件能暴露它。
+4. **Test**：设计最小实验区分 competing hypotheses。
+5. **Bound**：说明结论的版本、实现、并发、故障和资源边界。
+6. **Trace**：把关键 Claim ID 连接到 Source Evidence 和 Runtime Evidence。
+7. **Transfer**：比较相同约束在其他系统中的设计差异。
 
-因此：
+> “读过”不是完成；“模型能做出预测，并由可追溯证据约束”才接近完成。
 
-> **“读过”不是完成；“能建立模型并用证据验证”才接近完成。**
+## 2. Three organization principles
 
----
+### 2.1 Chapters navigate
 
-## 2. 三个组织原则
+书籍、文档和论文的章节用于保证来源覆盖率。章节是输入顺序，不是最终知识结构。
 
-### 2.1 章节负责导航
+每读一个 section，先问：
 
-书籍、官方文档和论文的章节非常适合保证学习覆盖率，因此可以按章节推进。
+- 它试图解释哪些机制？
+- 哪些内容只是背景、API 或术语？
+- 哪些陈述可以改写成可证伪 claim？
+- 哪些机制依赖其他机制？
+- 哪些观察能区分不同解释？
 
-但章节只是**输入顺序**，不应成为最终知识结构。
+阅读结果写入 Coverage Map 或来源 locator；不要把整章摘要复制成 Mechanism Unit。
 
-一个章节可能包含多个机制；同一个机制也可能跨越多个章节。因此每读一个章节，都需要回答：
+### 2.2 Mechanisms organize
 
-- 这一章试图解释哪些机制？
-- 哪些只是背景或 API 描述？
-- 哪些结论值得独立验证？
-- 它与已经学过的机制有什么依赖关系？
+长期知识以 Mechanism Unit 为核心。一个 unit 至少包含：
 
-### 2.2 机制负责组织
+- Problem / constraints；
+- Core Question；
+- scope / non-goals；
+- dependencies；
+- competing hypotheses；
+- objects / states / transitions / rules；
+- invariants；
+- causal chain；
+- observables；
+- claims；
+- evidence；
+- boundaries / counterexamples；
+- trade-offs；
+- transfer。
 
-长期知识以“机制单元（Mechanism Unit）”为核心，而不是以读书摘要为核心。
+一个 unit 只解决一个可以独立解释、独立实验和独立审查的机制问题。
 
-一个机制单元至少包含：
+### 2.3 Evidence constrains
 
-- Problem：它解决什么问题？
-- Model：参与者、状态、状态转换、规则是什么？
-- Invariants：哪些性质必须保持？
-- Causal chain：为什么会产生观察到的行为？
-- Boundaries：成立条件和失效条件是什么？
-- Observables：现实系统中可以观察什么？
-- Experiments：怎样验证？
-- Evidence：结论由什么证据支持？
-- Transfer：类似机制还出现在哪里？
+实验不是命令演示，也不是为了“证明我原来是对的”。它用于区分假设并限制结论。
 
-### 2.3 实验负责证明
+好的实验必须提前回答：
 
-默认采用“白盒化”学习：重要机制尽量不要停留在概念解释，而要寻找可观察证据。
+> 如果 H1 正确会看到什么？如果 H2 正确会看到什么？什么结果会推翻当前首选解释？
 
-实验不是为了演示命令，而是为了区分假设。
+Evidence 分为：
 
-好的实验应当回答：
+- Source Evidence：标准、论文、官方文档、源码、经典教材；
+- Runtime Evidence：实验输出、trace、measurement、状态快照、代码路径观察。
 
-> **如果我的机制模型是对的，系统应该出现什么现象？如果是错的，又会出现什么不同现象？**
+每条 evidence 都要连接到 Claim ID。
 
----
+## 3. Status separation
 
-## 3. 标准学习循环
+### Coverage status
 
-每个机制都遵循同一条主循环：
+```text
+not-started | in-progress | source-reviewed | mapped
+```
+
+只描述来源处理进度。
+
+### Mechanism Unit status
+
+```text
+draft | investigating | review-ready | learned | falsified | abandoned
+```
+
+描述整个工件的生命周期。
+
+### Claim status
+
+```text
+hypothesis | source-confirmed | observed | cross-validated | falsified
+```
+
+描述单条命题的证据水平。
+
+三者禁止混用。“章节已读”不能把 unit 改成 `learned`；一次实验也不能自动让所有 claims 变成 `cross-validated`。
+
+## 4. Standard learning loop
 
 ```text
 Question
   ↓
-Hypothesis
+Competing Hypotheses
   ↓
 Source Model
   ↓
+Claims
+  ↓
 Experiment
+  ↓
+Raw Evidence
   ↓
 Observation
   ↓
-Evidence
+Inference
+  ↓
+Claim Status Update
   ↓
 Conclusion
   ↓
@@ -90,225 +126,235 @@ Boundary / Counterexample
 Transfer
 ```
 
-### Step 1 — Question：先形成问题
+### Step 1 — Question
 
-不要从“这一章有哪些知识点”开始，而应把内容转换成机制问题，例如：
+不要从“这一章有哪些知识点”开始，而要形成 why / how / under what conditions 问题，例如：
 
-- `fork()` 之后父子进程为什么能看到几乎相同的地址空间？
-- 文件描述符为什么可以被继承，而文件偏移量有时又会共享？
-- Kafka 为什么需要 ISR，而不仅仅是副本数量？
-- MySQL 的 MVCC 为什么既需要版本，又需要可见性规则？
+- `fork()` 后父子进程为什么能看到近似相同的地址空间？
+- 文件描述符继承后，为什么文件偏移量可能共享？
+- Kafka 为什么需要 ISR，而不只看副本数？
+- MySQL MVCC 为什么同时需要版本与可见性规则？
 
-问题应尽量指向 **why / how / under what conditions**。
+问题必须足够小，能落到一个 Mechanism Unit。
 
-### Step 2 — Hypothesis：先写可证伪假设
+### Step 2 — Competing Hypotheses
 
-在实验前写出当前解释，不把猜测伪装成结论。
-
-例如：
+先写当前解释，再观察结果。不要事后倒写 hypothesis。
 
 ```text
-H1: fork 后父子进程立即拥有完全独立的物理内存副本。
-H2: fork 后页表最初共享物理页，写入时再通过 COW 分离。
+H1: fork 后立即复制所有物理页。
+H2: fork 后最初共享物理页，写入时通过 COW 分离。
 ```
 
-实验的目的就是区分 H1 与 H2。
+同时写明区分它们的观察。
 
-### Step 3 — Source Model：从权威材料建立初始模型
+### Step 3 — Source Model
 
-优先使用：
+优先从权威来源提取：
 
-1. 原始论文 / 标准 / 官方文档
-2. 经典教材
-3. 源代码或实现文档
-4. 高质量二手解释
+- objects；
+- states；
+- transitions；
+- rules；
+- invariants；
+- preconditions；
+- exceptional paths；
+- implementation/version boundaries。
 
-阅读时不要只摘录结论，而是提取：
+每条来源分配 Source ID，例如 `S1`，并记录稳定 locator。来源提供模型依据，不免除验证。
 
-- 系统对象
-- 状态
-- 状态转换
-- 规则
-- 不变量
-- 前置条件
-- 异常路径
+### Step 4 — Claims
 
-来源提供的是**模型依据**，不是免验证的答案。
+把重要叙述拆成可以独立检查的 Claim：
 
-### Step 4 — Experiment：设计最小实验
+```text
+C1: fork 返回后，父子进程具有独立的虚拟地址空间视图。
+C2: 初始物理页可通过 COW 共享。
+C3: 某页首次写入会触发私有副本建立。
+```
 
-实验应尽量只改变一个变量，并明确：
+避免一个大段 conclusion 同时包含多个证据水平不同的命题。
 
-- 要验证哪条假设？
-- 操纵什么？
-- 观察什么？
-- 预期现象是什么？
-- 什么结果会推翻当前假设？
+### Step 5 — Experiment
 
-优先选择能直接看到机制的观测方式，例如：
+实验尽量只改变一个关键变量，并记录：
 
-- 系统调用跟踪
-- `/proc`、虚拟文件系统或内核暴露状态
-- 文件描述符 / inode / socket 状态
-- 进程、线程、调度状态
-- 网络包
-- 数据库执行计划、锁、事务状态
-- Kafka offset、replica、ISR 状态
-- 性能计数器
-- 源代码关键路径
+- linked Claim ID / Hypothesis ID；
+- manipulated / controlled / observed variables；
+- environment / version；
+- commands / inputs；
+- expected outcomes；
+- falsification criteria；
+- raw evidence destination。
 
-### Step 5 — Observation：只记录观察事实
+优先选择最接近机制的观察：
 
-将“看到什么”和“为什么”分开。
+- system-call trace；
+- `/proc`、虚拟文件系统、内核暴露状态；
+- file descriptor / inode / socket state；
+- process / thread / scheduler state；
+- network packet；
+- database lock / transaction / execution plan；
+- Kafka offset / replica / ISR；
+- performance counter；
+- source-code path。
 
-错误写法：
+### Step 6 — Raw Evidence
+
+原始输出和解释分开保存。
+
+错误：
 
 ```text
 因为是 COW，所以内存没有复制。
 ```
 
-更好的写法：
+正确：
 
 ```text
-Observation: fork 后 RSS 没有立即近似翻倍；对子进程某页写入后相关私有页发生变化。
-Interpretation: 该现象与 COW 模型一致。
+E1 Raw evidence: fork 后 RSS 未立即近似翻倍；对子进程目标页写入后 Private_Dirty 增加。
+Observation: 写入前后该页的私有脏页统计发生变化。
+Inference: 现象与按页写时复制模型一致，但单独这一观察不排除所有替代解释。
 ```
 
-### Step 6 — Evidence：构造证据链
+Raw evidence 要可重现或可定位；不能只保存人工摘要。
 
-重要结论尽量同时拥有两类证据：
+### Step 7 — Claim-Evidence Matrix
 
-- **Source evidence**：教材、标准、论文、官方文档、源码。
-- **Runtime evidence**：实验产生的可重复观察。
+在 Mechanism Unit 中维护：
 
-建议给结论标记状态：
+| Claim | Status | Source evidence | Runtime evidence | Boundary |
+| --- | --- | --- | --- | --- |
+| C1 | source-confirmed | S1 | — | POSIX semantics |
+| C2 | cross-validated | S2 | E1 | tested on Linux version X |
+| C3 | hypothesis | — | — | unresolved |
 
-| 状态 | 含义 |
-| --- | --- |
-| `hypothesis` | 当前推测，尚未验证 |
-| `source-confirmed` | 权威来源支持，但尚无本地实验 |
-| `observed` | 实验观察支持，但还需要解释或来源交叉验证 |
-| `cross-validated` | 来源与实验相互支持 |
-| `falsified` | 已被实验或更强证据推翻 |
+更新规则：
 
-### Step 7 — Conclusion：写机制结论
+- 只有来源支持：`source-confirmed`；
+- 只有运行时观察支持：`observed`；
+- 二者交叉支持：`cross-validated`；
+- 被证据推翻：`falsified`；
+- 没有证据：保持 `hypothesis`。
 
-结论必须回答“为什么”，而不只是“怎么用”。
+### Step 8 — Conclusion
 
-尽量压缩为一条因果链：
+结论回答“为什么”，并只包含 matrix 支持到的强度。
+
+推荐因果链：
 
 ```text
-约束/问题
-→ 机制设计
-→ 状态变化
-→ 可观察行为
-→ 代价/副作用
+constraint/problem
+→ mechanism design
+→ state transition
+→ observable behavior
+→ cost/trade-off
 ```
 
-### Step 8 — Boundary：主动寻找边界与反例
+结论引用 Claim ID，而不是重新写一组无法追踪的陈述。
 
-每条重要结论继续追问：
+### Step 9 — Boundary / Counterexample
 
-- 是否在所有版本都成立？
-- 是否依赖具体实现？
-- 并发、故障、资源不足时是否仍成立？
-- 哪个反例最容易推翻这个模型？
+每条关键 claim 继续追问：
 
-没有边界的结论通常只是过度概括。
+- 所有版本都成立吗？
+- 是规范语义还是具体实现？
+- 并发、故障、资源不足时怎样？
+- 哪个反例最容易推翻模型？
+- 观察工具本身是否改变或隐藏行为？
+- 还有哪些替代解释没有排除？
 
-### Step 9 — Transfer：做跨系统迁移
+没有边界的结论通常是过度概括。
 
-最后寻找相同机制在其他系统中的表现，例如：
-
-- OS page cache ↔ 数据库 buffer pool
-- WAL ↔ Kafka log / replicated log
-- OS scheduler ↔ application work queue
-- file descriptor ↔ capability / handle
-- MVCC ↔ immutable versions / snapshot semantics
+### Step 10 — Transfer
 
 迁移不是强行类比，而是比较：
 
-- 相同约束是什么？
-- 机制哪里相同？
-- 哪个假设不同？
-- 为什么最终设计不同？
+- 相同约束；
+- 相同状态或规则；
+- 不同假设；
+- 不同 failure model；
+- 为什么最终设计不同。
 
----
+示例：
 
-## 4. 按章节学习，但不要被章节绑定
+- OS page cache ↔ database buffer pool；
+- WAL ↔ Kafka log / replicated log；
+- OS scheduler ↔ application work queue；
+- file descriptor ↔ capability / handle；
+- MVCC ↔ immutable versions / snapshots。
 
-对教材型学习轨道，默认按章节推进以避免知识漏洞。
+## 5. Chapter-driven learning without chapter-shaped knowledge
 
-每章采用下面的流程：
+教材轨道默认按章节推进，流程是：
 
 ```text
-章节预读
-→ 列核心问题
-→ 识别机制单元
-→ 阅读原文建立模型
-→ 为关键机制建立实验
-→ 收集证据
-→ 更新机制单元
-→ 记录章节覆盖情况
+section pre-read
+→ source questions
+→ candidate mechanisms
+→ source model
+→ mechanism branches
+→ experiments / evidence
+→ claim updates
+→ coverage update
 ```
 
-章节完成不等于机制完成。
+仓库维护两张独立地图：
 
-某一机制如果需要后续章节才能解释清楚，可以保持 `open`；反过来，一个已经掌握的机制也不需要在每个章节重复写一份笔记。
+1. Coverage Map：来源处理到哪里；
+2. Mechanism Map：有哪些机制、依赖和 Unit status。
 
-因此仓库最终应形成两张互相独立的地图：
+一个章节可以映射多个机制；一个机制也可以跨多个章节。Coverage 更新不能替代 Mechanism Unit。
 
-1. **Coverage Map**：书/文档章节学到哪里，用于防止遗漏。
-2. **Mechanism Map**：已经建立了哪些机制及其依赖关系，用于形成真正的系统模型。
+## 6. Experiment quality
 
----
+实验至少满足：
 
-## 5. 实验质量要求
+### Reproducible
 
-实验至少应满足：
+记录环境、版本、命令、输入、权限、前置状态和清理步骤。
 
-### 可重复
+### Minimal
 
-记录环境、版本、命令、输入和预期结果，使之后能够重做。
+一个实验优先区分一个关键假设；复杂场景拆成多个 experiment。
 
-### 最小化
+### Falsifiable
 
-一个实验优先验证一个关键假设，避免把多个变量混在一起。
+执行前记录预期和反驳条件。
 
-### 可证伪
+### Observation separated from inference
 
-必须提前说明什么现象会反驳当前解释。
+Raw evidence、observation、inference、conclusion 分栏保存。
 
-### 观察与解释分离
+### Alternative explanations retained
 
-原始输出、观察事实、解释结论分开保存。
+未排除的解释写入 Limits，不因结果符合预期就删除。
 
-### 不伪造确定性
+### Appropriate certainty
 
-如果现象只能“与模型一致”，就不要写成“实验已经证明唯一原因”。
+“与模型一致”不等于“唯一原因已证明”。
 
----
+## 7. Definition of Learned
 
-## 6. Definition of Learned
+Mechanism Unit 标记为 `review-ready` 前，应大部分回答“是”：
 
-一个机制只有在大部分问题都能回答“是”时，才标记为 learned：
+- [ ] Problem、scope 和 non-goals 清楚；
+- [ ] dependencies 已记录；
+- [ ] objects、states、transitions 和 invariants 可解释；
+- [ ] causal chain 能预测至少一个条件变化后的行为；
+- [ ] 关键叙述已拆成 Claim IDs；
+- [ ] 每个关键 claim 有 evidence 或明确保持 unresolved；
+- [ ] 至少一个重要 claim 经过可重复实验，或写明实验不可行原因；
+- [ ] raw evidence 与 interpretation 分离；
+- [ ] 至少一个 boundary、异常路径或 counterexample；
+- [ ] trade-off 已说明；
+- [ ] 至少进行一次跨系统比较；
+- [ ] `MERGE_REVIEW.md` 已完成；
+- [ ] repository validator 通过。
 
-- [ ] 我能不用背术语，自己解释它解决的问题吗？
-- [ ] 我能画出主要对象、状态和状态转换吗？
-- [ ] 我能解释关键因果链吗？
-- [ ] 我能预测至少一个条件变化后的行为吗？
-- [ ] 我能指出哪些现象可以观察到这个机制吗？
-- [ ] 我至少完成一个能区分关键假设的实验吗？
-- [ ] 关键结论是否有来源或运行时证据？
-- [ ] 我能指出至少一个边界条件或反例吗？
-- [ ] 我能说明这个机制的代价或 trade-off 吗？
-- [ ] 我能把它与另一个系统中的类似机制比较吗？
+若只能回答“API 怎么调用”，仍属于 black-box knowledge。
 
-若只能回答“API 怎么调用”，则仍属于 black-box knowledge。
-
----
-
-## 7. 推荐目录约定
+## 8. Recommended directory layout
 
 ```text
 topics/
@@ -318,63 +364,49 @@ topics/
     mechanisms/
       process-creation/
         README.md
+        MERGE_REVIEW.md
         experiments/
+          EXP-001.md
+          raw/
   kafka/
     README.md
     coverage.md
     mechanisms/
-  mysql/
-    README.md
-    coverage.md
-    mechanisms/
-  redis/
-    README.md
-    coverage.md
-    mechanisms/
 ```
 
-每个系统都有自己的 `coverage.md`，但所有系统复用同一种 mechanism / experiment 模板。
+职责分离：
 
-这让“教材结构”和“知识结构”保持关注点分离：
+- `coverage.md`：学到哪里；
+- system `README.md`：机制地图；
+- mechanism `README.md`：理解了什么；
+- `experiments/`：观察了什么；
+- `MERGE_REVIEW.md`：为什么允许进入 `main`。
 
-- chapter/coverage 解决 **学到哪里**；
-- mechanism 解决 **真正理解了什么**；
-- experiment 解决 **凭什么相信**。
+## 9. Minimum session closure
 
----
-
-## 8. 每次学习会话的最小闭环
-
-一次学习不要求完成整个章节，但必须尽量完成一个小闭环：
+一次学习会话至少留下：
 
 ```text
-1 个明确问题
-+ 1 个当前模型/假设
-+ 1 组来源证据或实验观察
-+ 1 个更新后的结论
-+ 1 个仍未解决的问题
+1 explicit question
++ 1 current hypothesis/model
++ 1 source locator or runtime observation
++ 1 claim status update
++ 1 unresolved question
 ```
 
-这样即使学习被中断，仓库仍然保存当前认知状态，而不是只留下散乱笔记。
+会话可以中断，但认知状态必须可恢复。
 
----
+## 10. AI role
 
-## 9. AI 的角色
+AI 可以帮助提取 claim、生成 competing hypotheses、设计实验、解释现象、寻找反例和审查 evidence overreach。
 
-AI 可以帮助：
+AI 的回答本身不作为最终证据。最终链路应回到：
 
-- 从原文提取可验证命题
-- 生成竞争假设
-- 设计最小实验
-- 解释观察结果
-- 寻找反例和边界条件
-- 建立跨系统联系
-- 检查“结论是否超出证据”
-
-但 AI 的回答本身不作为最终证据。
-
-最终应尽量回到：
-
-> **source → experiment → observation → reasoning → conclusion**
-
-这也是本仓库存在的核心意义：把“AI 帮我解释”升级为“AI 帮我建立并验证系统模型”。
+```text
+source / experiment
+→ raw evidence
+→ observation
+→ reasoning
+→ claim status
+→ bounded conclusion
+```

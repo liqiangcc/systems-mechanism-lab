@@ -40,7 +40,7 @@ Coverage status 只能使用：
 
 ## Current checkpoint
 
-当前完成的是 **Source Map / Coverage Map 建设**：完整目录已经通过 reading-mcp 读取并分段核对；正文 585 个 Section 仍全部为 `not-started`；Mechanism Map 仍为空。
+Source Map / Coverage Map 建设已经完成；本次进一步完成了 **TLPI 1.1 正文的 source-first review**。当前 `1.1 = source-reviewed`，其余 584 个编号 Section 仍为 `not-started`；Mechanism Map 仍为空。
 
 已验证：
 
@@ -49,16 +49,16 @@ Coverage status 只能使用：
 - 229 个 `X.Y.Z` Subsection，父级内编号连续；
 - 6 个 Appendix，A–F 完整；
 - Chapter 64 和 Appendix A–F 均存在，未因响应大小遗漏；
-- reading-mcp 结构与读取响应均未标记 `truncated`；
+- TLPI 1.1 使用 primary EPUB 的精确 `section_id` 完整读取，`truncated=false`；
 - Chapter 14 EPUB 标题异常已记录在 Source Map，不据异常节点猜测正文主题。
 
 ## Chapter summary
 
-Chapter status 是本章 Section 状态的汇总；当前全部正文尚未开始。
+Chapter status 是本章 Section 状态的汇总；Chapter 1 已开始但未完成全部 Section，因此为 `in-progress`，其余 Chapter 仍为 `not-started`。
 
 | Chapter | Canonical title | Section range | Section count | Status |
 | ---: | --- | --- | ---: | --- |
-| 1 | HISTORY AND STANDARDS | `1.1`–`1.4` | 4 | not-started |
+| 1 | HISTORY AND STANDARDS | `1.1`–`1.4` | 4 | in-progress |
 | 2 | FUNDAMENTAL CONCEPTS | `2.1`–`2.20` | 20 | not-started |
 | 3 | SYSTEM PROGRAMMING CONCEPTS | `3.1`–`3.8` | 8 | not-started |
 | 4 | FILE I/O: THE UNIVERSAL I/O MODEL | `4.1`–`4.10` | 10 | not-started |
@@ -133,10 +133,25 @@ Chapter status 是本章 Section 状态的汇总；当前全部正文尚未开�
 
 | Chapter | Section | Exact source title | Locator | Status |
 | ---: | --- | --- | --- | --- |
-| 1 | `1.1` | A Brief History of UNIX and C | `tlpi:1.1` | not-started |
+| 1 | `1.1` | A Brief History of UNIX and C | `tlpi:1.1` | source-reviewed |
 | 1 | `1.2` | A Brief History of Linux | `tlpi:1.2` | not-started |
 | 1 | `1.3` | Standardization | `tlpi:1.3` | not-started |
 | 1 | `1.4` | Summary | `tlpi:1.4` | not-started |
+
+##### TLPI 1.1 source review
+
+- Primary EPUB exact title：`1.1 UNIX和C语言简史`
+- reading-mcp document_id：`doc:sha256:286e0104a40d05c3cb76f08e2d6a06391ce9d1bc603351aefc2340aca3349b2f`
+- source：`file:///root/doc/LinuxUNIX系统编程手册（上、下册）（异步图书） (Michael Kerrisk) (z-library.sk, 1lib.sk, z-lib.sk) (2).epub`
+- section_id：`section://epub-10/第1章-历史和标准/1-1-unix和c语言简史`
+- stable semantic locator：`tlpi:1.1`
+- native locator：`epub:OEBPS/text00009.html#nav_point_21`
+- section_path：`第1章 历史和标准` → `1.1 UNIX和C语言简史`
+- truncated：`false`
+- Locator 核对：Source Map 的 `tlpi:1.1` 与英文 canonical TOC 标题仍可用于格式无关导航；本次 primary EPUB 实测标题为中文，并首次确认可直接恢复到正文的 `section_id` 与 native locator。
+- 最小结构摘要：本节先交代 UNIX 的早期来源以及 C 与 UNIX 的共同发展，再概述 UNIX 第一版至第六版及高校传播，最后进入第七版后的 BSD/System V 分支、早期跨硬件移植、4.2BSD 的 TCP/IP/套接字 API 与商业 UNIX 扩展。
+- Candidate questions：C 重写 UNIX 为什么促进跨硬件移植；早期管道如何演化为后续 IPC 接口；BSD/System V 分支分别怎样影响后来的 UNIX/Linux 编程接口；4.2BSD 套接字 API 为什么成为后续网络编程的重要接口来源。
+- Mechanism Unit mapping：`none`。**本 Section 完成 source review，但暂不产生 Mechanism Unit。** 本节以历史背景和接口来路为主，尚未形成一个在本节内部就足够独立解释、实验和审查的机制问题。
 
 #### Chapter 2 — FUNDAMENTAL CONCEPTS
 
@@ -1074,4 +1089,4 @@ Coverage 更新使用独立 `coverage(unix): ...` commit。目录映射、Mechan
 
 ## Next checkpoint
 
-下一次只读取 **TLPI 1.1 — A Brief History of UNIX and C**。它是前言之后的第一个编号正文 Section，并为后续区分 UNIX、Linux、C 与标准化语境提供来源背景。此次映射任务不读取该 Section。
+下一次只读取 **TLPI 1.2 — Linux简史**。reading-mcp 的结构定位已确认该标题，但本次未读取 1.2 正文；按 Chapter 1 的顺序，它是 1.1 之后唯一的下一 Section，并继续补足进入标准化内容前的 Linux 历史背景。
